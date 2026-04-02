@@ -1,0 +1,262 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  CLIENT
+  SUPPLIER
+  ADMIN
+}
+
+enum ProjectStatus {
+  DRAFT
+  OPEN
+  IN_REVIEW
+  IN_PROGRESS
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+enum BidStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  WITHDRAWN
+}
+
+enum CommissionType {
+  SUCCESS
+  FAILURE
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCEEDED
+  FAILED
+  REFUNDED
+}
+
+enum PaymentType {
+  REGISTRATION
+  COMMISSION
+  SPONSORING
+  ESCROW
+}
+
+enum CommissionStatus {
+  PENDING
+  INVOICED
+  PAID
+}
+
+enum DiscountType {
+  PERCENTAGE
+  FIXED_CENTS
+}
+
+enum OfferTarget {
+  REGISTRATION
+  COMMISSION_RATE
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  name         String
+  role         Role     @default(CLIENT)
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  supplierProfile SupplierProfile?
+  clientProfile   ClientProfile?
+  payments        Payment[]
+
+  @@map("users")
+}
+
+model SupplierProfile {
+  id               String    @id @default(cuid())
+  userId           String    @unique @map("user_id")
+  companyName      String    @map("company_name")
+  description      String?
+  registrationPaid Boolean   @default(false) @map("registration_paid")
+  stripeCustomerId String?   @map("stripe_customer_id")
+  registrationPaidAt DateTime? @map("registration_paid_at")
+  averageRating    Float     @default(0) @map("average_rating")
+  totalRatings     Int       @default(0) @map("total_ratings")
+  sponsoredUntil      DateTime? @map("sponsored_until")
+  stripeAccountId     String?   @map("stripe_account_id")
+  stripeAccountActive Boolean   @default(false) @map("stripe_account_active")
+  createdAt           DateTime  @default(now()) @map("created_at")
+
+  user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bids        Bid[]
+  ratings     Rating[]
+  redemptions PromoRedemption[]
+
+  @@map("supplier_profiles")
+}
+
+model ClientProfile {
+  id               String   @id @default(cuid())
+  userId           String   @unique @map("user_id")
+  companyName      String?  @map("company_name")
+  stripeCustomerId String?  @map("stripe_customer_id")
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  projects Project[]
+  ratings  Rating[]
+
+  @@map("client_profiles")
+}
+
+model Project {
+  id             String        @id @default(cuid())
+  clientId       String        @map("client_id")
+  title          String
+  description    String
+  category       String?
+  deadline       DateTime?
+  referencePrice Decimal       @map("reference_price") @db.Decimal(10, 2)
+  status         ProjectStatus @default(OPEN)
+  selectedBidId         String?  @map("selected_bid_id")
+  escrowPaymentIntentId String?  @map("escrow_payment_intent_id")
+  createdAt             DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime      @updatedAt @map("updated_at")
+
+  client     ClientProfile @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  bids       Bid[]
+  rating     Rating?
+  commission Commission?
+
+  @@map("projects")
+}
+
+model Bid {
+  id            String    @id @default(cuid())
+  projectId     String    @map("project_id")
+  supplierId    String    @map("supplier_id")
+  amount        Decimal   @db.Decimal(10, 2)
+  coverLetter   String?   @map("cover_letter")
+  estimatedDays Int?      @map("estimated_days")
+  status        BidStatus @default(PENDING)
+  submittedAt   DateTime  @default(now()) @map("submitted_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  project    Project         @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  supplier   SupplierProfile @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  commission Commission?
+
+  @@unique([projectId, supplierId])
+  @@map("bids")
+}
+
+model Rating {
+  id         String   @id @default(cuid())
+  projectId  String   @unique @map("project_id")
+  supplierId String   @map("supplier_id")
+  clientId   String   @map("client_id")
+  score      Int
+  comment    String?
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  project  Project         @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  supplier SupplierProfile @relation(fields: [supplierId], references: [id])
+  client   ClientProfile   @relation(fields: [clientId], references: [id])
+
+  @@map("ratings")
+}
+
+model Commission {
+  id                     String           @id @default(cuid())
+  projectId              String           @unique @map("project_id")
+  bidId                  String           @unique @map("bid_id")
+  baseAmount             Decimal          @map("base_amount") @db.Decimal(10, 2)
+  commissionRate         Decimal          @map("commission_rate") @db.Decimal(5, 4)
+  commissionAmount       Decimal          @map("commission_amount") @db.Decimal(10, 2)
+  type                   CommissionType
+  status                 CommissionStatus @default(PENDING)
+  stripePaymentIntentId  String?          @map("stripe_payment_intent_id")
+  stripeTransferId       String?          @map("stripe_transfer_id")
+  stripeRefundId         String?          @map("stripe_refund_id")
+  createdAt              DateTime         @default(now()) @map("created_at")
+  paidAt                 DateTime?        @map("paid_at")
+
+  project Project @relation(fields: [projectId], references: [id])
+  bid     Bid     @relation(fields: [bidId], references: [id])
+
+  @@map("commissions")
+}
+
+model Payment {
+  id                    String        @id @default(cuid())
+  userId                String        @map("user_id")
+  type                  PaymentType
+  amount                Decimal       @db.Decimal(10, 2)
+  status                PaymentStatus @default(PENDING)
+  stripePaymentIntentId String?       @unique @map("stripe_payment_intent_id")
+  stripeChargeId        String?       @map("stripe_charge_id")
+  referenceId           String?       @map("reference_id")
+  referenceType         String?       @map("reference_type")
+  createdAt             DateTime      @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("payments")
+}
+
+model CommissionConfig {
+  id                   String   @id @default("global")
+  successRate          Decimal  @map("success_rate") @db.Decimal(5, 4)
+  failureRate          Decimal  @map("failure_rate") @db.Decimal(5, 4)
+  registrationFeeCents Int      @map("registration_fee_cents")
+  updatedAt            DateTime @updatedAt @map("updated_at")
+
+  @@map("commission_config")
+}
+
+model PromoOffer {
+  id             String      @id @default(cuid())
+  code           String      @unique
+  description    String
+  target         OfferTarget
+  discountType   DiscountType @map("discount_type")
+  discountValue  Decimal     @map("discount_value") @db.Decimal(10, 2)
+  durationMonths Int?        @map("duration_months")
+  maxUses        Int?        @map("max_uses")
+  currentUses    Int         @default(0) @map("current_uses")
+  expiresAt      DateTime?   @map("expires_at")
+  active         Boolean     @default(true)
+  createdAt      DateTime    @default(now()) @map("created_at")
+
+  redemptions PromoRedemption[]
+
+  @@map("promo_offers")
+}
+
+model PromoRedemption {
+  id                      String    @id @default(cuid())
+  offerId                 String    @map("offer_id")
+  supplierId              String    @map("supplier_id")
+  redeemedAt              DateTime  @default(now()) @map("redeemed_at")
+  originalAmountCents     Int       @map("original_amount_cents")
+  finalAmountCents        Int       @map("final_amount_cents")
+  commissionDiscountUntil DateTime? @map("commission_discount_until")
+
+  offer    PromoOffer      @relation(fields: [offerId], references: [id])
+  supplier SupplierProfile @relation(fields: [supplierId], references: [id])
+
+  @@unique([offerId, supplierId])
+  @@map("promo_redemptions")
+}

@@ -1,0 +1,48 @@
+{
+  "name": "cocott-nostress",
+  "version": "1.0.0",
+  "description": "Plateforme de mise en relation clients-fournisseurs",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:push": "prisma db push",
+    "db:studio": "prisma studio"
+  },
+  "license": "ISC",
+  "dependencies": {
+    "@hookform/resolvers": "^3.10.0",
+    "@prisma/client": "^5.22.0",
+    "@stripe/stripe-js": "^9.0.1",
+    "@tailwindcss/postcss": "^4.2.2",
+    "@types/bcryptjs": "^2.4.6",
+    "bcryptjs": "^3.0.3",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-react": "^1.7.0",
+    "next": "^14.2.35",
+    "next-auth": "^5.0.0-beta.30",
+    "prisma": "^5.22.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-hook-form": "^7.72.0",
+    "stripe": "^16.12.0",
+    "tailwind-merge": "^3.5.0",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@tailwindcss/forms": "^0.5.11",
+    "@types/node": "^25.5.0",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "autoprefixer": "^10.4.27",
+    "eslint": "^9.39.4",
+    "eslint-config-next": "^16.2.2",
+    "postcss": "^8.5.8",
+    "tailwindcss": "^4.2.2",
+    "typescript": "^6.0.2"
+  }
+}

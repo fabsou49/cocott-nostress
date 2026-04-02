@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx create-next-app@latest . --typescript --tailwind --eslint --app --src-dir --import-alias \"@/*\" --no-turbopack --yes)",
+      "Bash(npx create-next-app@latest . --typescript --tailwind --eslint --app --src-dir --import-alias \"@/*\" --no-turbopack --yes --name cocott-nostress)",
+      "Bash(npm init:*)",
+      "Bash(node -e \"const p=require\\(''./package.json''\\); p.name=''cocott-nostress''; require\\(''fs''\\).writeFileSync\\(''./package.json'', JSON.stringify\\(p, null, 2\\)\\)\")",
+      "Bash(npx tsc:*)",
+      "Bash(npm run:*)",
+      "Bash(npx prisma:*)",
+      "Bash(DATABASE_URL=\"postgresql://postgres:password@localhost:5432/cocott_nostress\" npx prisma migrate dev --name init)",
+      "Bash(ls /d/APPS/Cocott_nostress/src/app/\\\\\\(admin\\\\\\)/admin/projets)",
+      "Bash(ls /d/APPS/Cocott_nostress/src/app/\\\\\\(admin\\\\\\)/admin/statistiques)",
+      "Bash(cat /d/APPS/Cocott_nostress/src/app/\\\\\\(fournisseur\\\\\\)/fournisseur/inscription-paiement/page.tsx)",
+      "Bash(ls -la /d/APPS/Cocott_nostress/src/app/\\\\\\(fournisseur\\\\\\)/fournisseur/)",
+      "Bash(ls -la \"/d/APPS/Cocott_nostress/src/app/\\(client\\)/client/\")"
+    ]
+  }
+}
