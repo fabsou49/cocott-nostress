@@ -89,7 +89,9 @@ model SupplierProfile {
   userId           String    @unique @map("user_id")
   companyName      String    @map("company_name")
   description      String?
-  registrationPaid Boolean   @default(false) @map("registration_paid")
+  skills           String[]  @default([])
+  experienceLevel  String?   @map("experience_level")
+  registrationPaid Boolean   @default(true) @map("registration_paid")
   stripeCustomerId String?   @map("stripe_customer_id")
   registrationPaidAt DateTime? @map("registration_paid_at")
   averageRating    Float     @default(0) @map("average_rating")

@@ -8,13 +8,6 @@ export default async function FournisseurLayout({ children }: { children: React.
   const session = await auth();
   if (!session || session.user.role !== "SUPPLIER") redirect("/connexion");
 
-  const supplier = await prisma.supplierProfile.findUnique({ where: { userId: session.user.id } });
-
-  // If registration not paid, redirect to payment page (unless already there)
-  if (!supplier?.registrationPaid) {
-    redirect("/fournisseur/inscription-paiement");
-  }
-
   return (
     <Providers>
       <div className="flex h-screen overflow-hidden">

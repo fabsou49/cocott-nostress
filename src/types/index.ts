@@ -40,14 +40,35 @@ export const BID_STATUS_LABELS: Record<BidStatus, string> = {
 };
 
 export const PROJECT_CATEGORIES = [
-  "Développement web",
-  "Design graphique",
-  "Marketing digital",
-  "Rédaction & Contenu",
-  "Traduction",
-  "Comptabilité & Finance",
-  "Conseil & Stratégie",
-  "Formation",
-  "Photographie & Vidéo",
+  "Développement web & mobile",
+  "Intelligence artificielle & data",
+  "Design & UX",
+  "Rédaction & contenu",
+  "Marketing & SEO",
+  "Automatisation & no-code",
+  "Vidéo & médias",
+  "Conseil & stratégie",
   "Autre",
 ];
+
+export const SUPPLIER_SKILLS = [
+  "Développement web",
+  "Développement mobile",
+  "Intelligence artificielle",
+  "No-code & automatisation",
+  "Design & UX",
+  "Rédaction & contenu",
+  "Marketing & SEO",
+  "Data & analyse",
+  "Vidéo & médias",
+  "Conseil & stratégie",
+];
+
+export type ExperienceLevel = "JUNIOR" | "INTERMEDIATE" | "SENIOR" | "EXPERT";
+
+export const EXPERIENCE_LEVEL_LABELS: Record<ExperienceLevel, string> = {
+  JUNIOR: "Junior (< 2 ans)",
+  INTERMEDIATE: "Intermédiaire (2–5 ans)",
+  SENIOR: "Senior (5–10 ans)",
+  EXPERT: "Expert (10+ ans)",
+};

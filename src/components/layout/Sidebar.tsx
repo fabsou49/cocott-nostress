@@ -13,7 +13,6 @@ import {
   CreditCard,
   Tag,
   LogOut,
-  Zap,
 } from "lucide-react";
 
 interface NavItem {
@@ -37,8 +36,6 @@ const supplierNav: NavItem[] = [
   { href: "/fournisseur/tableau-de-bord", label: "Tableau de bord", icon: <LayoutDashboard className="h-4 w-4" /> },
   { href: "/fournisseur/projets", label: "Parcourir les projets", icon: <FolderOpen className="h-4 w-4" /> },
   { href: "/fournisseur/mes-offres", label: "Mes offres", icon: <FileText className="h-4 w-4" /> },
-  { href: "/fournisseur/paiements", label: "Compte bancaire", icon: <CreditCard className="h-4 w-4" /> },
-  { href: "/fournisseur/visibilite", label: "Visibilité", icon: <Zap className="h-4 w-4" /> },
 ];
 
 const adminNav: NavItem[] = [

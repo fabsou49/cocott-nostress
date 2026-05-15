@@ -7,21 +7,10 @@ import { Button } from "@/components/ui/button";
 import { StarRating } from "@/components/ratings/StarRating";
 import { AcceptBidButton } from "@/components/projets/AcceptBidButton";
 import { UpdateStatusButton } from "@/components/projets/UpdateStatusButton";
-import {
-  Calendar,
-  EyeOff,
-  Tag,
-  Users,
-  Clock,
-  CheckCircle,
-  Star,
-  Zap,
-  CreditCard,
-  AlertCircle,
-} from "lucide-react";
+import { Calendar, EyeOff, Tag, Users, Clock, CheckCircle, Star } from "lucide-react";
 import Link from "next/link";
 import { PROJECT_STATUS_LABELS, ProjectStatus } from "@/types";
-import { PayEscrowButton } from "@/components/projets/PayEscrowButton";
+import { getSupplierLabels } from "@/lib/utils/labels";
 
 export default async function ClientProjectDetailPage({ params }: { params: { id: string } }) {
   const session = await auth();
@@ -38,7 +27,9 @@ export default async function ClientProjectDetailPage({ params }: { params: { id
               companyName: true,
               averageRating: true,
               totalRatings: true,
-              sponsoredUntil: true,
+              skills: true,
+              experienceLevel: true,
+              description: true,
               user: { select: { name: true } },
             },
           },
@@ -51,13 +42,9 @@ export default async function ClientProjectDetailPage({ params }: { params: { id
 
   if (!project || project.clientId !== client?.id) notFound();
 
-  // Sponsored suppliers appear first
-  const now = new Date();
-  const sortedBids = [...project.bids].sort((a, b) => {
-    const aSponsored = a.supplier.sponsoredUntil && a.supplier.sponsoredUntil > now ? 1 : 0;
-    const bSponsored = b.supplier.sponsoredUntil && b.supplier.sponsoredUntil > now ? 1 : 0;
-    return bSponsored - aSponsored;
-  });
+  const sortedBids = [...project.bids].sort((a, b) =>
+    a.submittedAt < b.submittedAt ? -1 : 1
+  );
 
   const statusVariants: Record<string, "default" | "success" | "warning" | "secondary" | "destructive"> = {
     OPEN: "default",
@@ -102,24 +89,8 @@ export default async function ClientProjectDetailPage({ params }: { params: { id
         </div>
       </div>
 
-      {/* Awaiting payment */}
-      {project.status === "IN_REVIEW" && (
-        <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <AlertCircle className="h-5 w-5 text-amber-600 shrink-0" />
-            <div>
-              <p className="text-sm font-semibold text-amber-800">Paiement requis pour démarrer le projet</p>
-              <p className="text-xs text-amber-700">
-                Le montant sera conservé en séquestre et versé au fournisseur à la fin du projet.
-              </p>
-            </div>
-          </div>
-          <PayEscrowButton projectId={project.id} />
-        </div>
-      )}
-
       {/* Actions */}
-      {project.status === "IN_PROGRESS" && (
+      {(project.status === "IN_PROGRESS" || project.status === "IN_REVIEW") && (
         <div className="flex gap-3">
           <UpdateStatusButton projectId={project.id} newStatus="COMPLETED" label="Marquer comme terminé" variant="success" />
           <UpdateStatusButton projectId={project.id} newStatus="FAILED" label="Marquer comme échoué" variant="destructive" />
@@ -174,7 +145,14 @@ export default async function ClientProjectDetailPage({ params }: { params: { id
           ) : (
             <div className="space-y-4">
               {sortedBids.map((bid) => {
-                const isSponsored = bid.supplier.sponsoredUntil && bid.supplier.sponsoredUntil > now;
+                const labels = getSupplierLabels(bid.supplier);
+                const labelColors = {
+                  blue: "bg-blue-100 text-blue-700",
+                  violet: "bg-violet-100 text-violet-700",
+                  green: "bg-green-100 text-green-700",
+                  amber: "bg-amber-100 text-amber-700",
+                  emerald: "bg-emerald-100 text-emerald-700",
+                };
                 return (
                 <div
                   key={bid.id}
@@ -183,23 +161,15 @@ export default async function ClientProjectDetailPage({ params }: { params: { id
                       ? "border-green-300 bg-green-50"
                       : bid.status === "REJECTED"
                       ? "border-gray-200 bg-gray-50 opacity-60"
-                      : isSponsored
-                      ? "border-yellow-300 bg-yellow-50"
                       : "border-gray-200 bg-white"
                   }`}
                 >
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-1 flex-wrap">
+                      <div className="flex items-center gap-3 mb-2 flex-wrap">
                         <p className="font-semibold text-gray-900">
                           {bid.supplier.companyName || bid.supplier.user.name}
                         </p>
-                        {isSponsored && (
-                          <Badge className="bg-yellow-400 text-yellow-900 hover:bg-yellow-400 gap-1">
-                            <Zap className="h-3 w-3" />
-                            Mis en avant
-                          </Badge>
-                        )}
                         {bid.status === "ACCEPTED" && (
                           <Badge variant="success">
                             <CheckCircle className="h-3 w-3 mr-1" />
@@ -210,6 +180,19 @@ export default async function ClientProjectDetailPage({ params }: { params: { id
                           <Badge variant="secondary">Refusé</Badge>
                         )}
                       </div>
+                      {/* Labels générés par la plateforme */}
+                      {labels.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5 mb-2">
+                          {labels.map((label) => (
+                            <span
+                              key={label.text}
+                              className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${labelColors[label.color]}`}
+                            >
+                              {label.text}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                       <StarRating value={bid.supplier.averageRating} size="sm" />
                       <p className="text-xs text-gray-400 mt-0.5">
                         {bid.supplier.totalRatings} évaluation{bid.supplier.totalRatings !== 1 ? "s" : ""}

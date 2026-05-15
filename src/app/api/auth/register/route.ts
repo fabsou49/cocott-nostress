@@ -55,6 +55,9 @@ export async function POST(req: NextRequest) {
             create: {
               companyName: parsed.data.companyName,
               description: parsed.data.description || null,
+              skills: parsed.data.skills,
+              experienceLevel: parsed.data.experienceLevel || null,
+              registrationPaid: true,
             },
           },
         },
